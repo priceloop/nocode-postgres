@@ -8,7 +8,7 @@ phases:
         inputs:
           commands:
             - amazon-linux-extras install postgresql14
-            - yum -y install postgresql-server postgresql-devel git gcc
+            - yum -y install postgresql-server postgresql-server-devel git gcc
       - action: "ExecuteBash"
         name: "extensions"
         inputs:
