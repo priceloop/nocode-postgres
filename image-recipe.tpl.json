@@ -4,7 +4,7 @@
     "parentImage": "arn:aws:imagebuilder:eu-central-1:aws:image/amazon-linux-2-x86/x.x.x",
     "semanticVersion": "1.0.0",
     "tags": {
-        "Name": "nocode-postgres-ami-${APP_VERSION}"
+        "Name": "nocode-postgres-ami-${APP_VERSION}",
         "Version": "${APP_VERSION}"
     },
     "components": [
