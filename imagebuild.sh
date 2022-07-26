@@ -3,7 +3,7 @@
 set -e
 
 amazon-linux-extras install postgresql14
-yum -y install postgresql-server postgresql-server-devel git gcc jq
+yum -y install postgresql-server postgresql-server-devel postgresql-plpython3 git gcc jq
 
 make -C /postgres_extension/functions
 make -C /postgres_extension/functions install
