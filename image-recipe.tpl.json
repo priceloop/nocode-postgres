@@ -1,0 +1,15 @@
+{
+    "name": "nocode-postgres-ami-${APP_VERSION}",
+    "description": "nocode-postgres image with extensions",
+    "parentImage": "arn:aws:imagebuilder:eu-central-1:aws:image/amazon-linux-2-x86/x.x.x",
+    "semanticVersion": "1.0.0",
+    "components": [
+        {
+            "componentArn": "arn:aws:imagebuilder:${AWS_REGION}:${AWS_ACCOUNT_ID}:component/nocode-postgres-ami-setup/1.0.0",
+            "parameters": [
+                "name": "nocode_postgres_version",
+                "value": [ "${APP_VERSION}" ]
+            ]
+        }
+    ]
+}
