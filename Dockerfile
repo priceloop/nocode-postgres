@@ -1,7 +1,7 @@
 FROM postgres:14
 
 RUN apt-get update && apt-get -y install git make gcc python3-pip postgresql-plpython3-14 postgresql-server-dev-14
-RUN pip3 install boto3
+RUN pip3 install boto3 requests
 
 # install postgres extension source code
 
