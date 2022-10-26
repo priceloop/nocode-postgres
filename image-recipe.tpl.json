@@ -1,5 +1,5 @@
 {
-    "name": "nocode-postgres-ami-${APP_VERSION}",
+    "name": "nocode-postgres-ami-${APP_VERSION_SANE}",
     "description": "nocode-postgres image with extensions",
     "parentImage": "arn:aws:imagebuilder:eu-central-1:aws:image/amazon-linux-2-x86/x.x.x",
     "semanticVersion": "1.0.0",
