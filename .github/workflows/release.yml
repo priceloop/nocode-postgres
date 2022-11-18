@@ -40,6 +40,20 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Generate github token
+        id: generate-token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.GH_APP_ID }}
+          private_key: ${{ secrets.GH_PRIVATE_KEY }}
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE_ARTIFACTS }}
+          role-session-name: "priceloop-nocode-postgres-github-action"
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Prepare tags
         id: prep
         run: |
