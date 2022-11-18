@@ -16,14 +16,75 @@ permissions:
   contents: read
   packages: write
 
-jobs:
+env:
+  APP_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || github.event.pull_request.head.sha || github.sha  }}
 
-  release:
+jobs:
+  release-ami:
     runs-on: ubuntu-latest
-    name: "Release"
+    name: "Release AMI"
     env:
       AWS_REGION: eu-central-1
-      APP_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || github.event.pull_request.head.sha || github.sha  }}
+      ARTIFACTS_BUCKET: priceloop-build-artifacts-nocode
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Generate github token
+        id: generate-token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.GH_APP_ID }}
+          private_key: ${{ secrets.GH_PRIVATE_KEY }}
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE_ARTIFACTS }}
+          role-session-name: "priceloop-nocode-postgres-github-action"
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Publish S3 Artifacts
+        run: |
+          aws s3 cp imagebuild.sh s3://${ARTIFACTS_BUCKET}/nocode-postgres/${APP_VERSION}/imagebuild.sh
+          aws s3 cp --recursive postgres_extension s3://${ARTIFACTS_BUCKET}/nocode-postgres/${APP_VERSION}/postgres_extension
+          aws s3 cp --recursive postgres_config s3://${ARTIFACTS_BUCKET}/nocode-postgres/${APP_VERSION}/postgres_config
+
+      - name: AMI Build
+        run: |
+          export AWS_ACCOUNT_ID="$(aws sts get-caller-identity | jq -r '.Account')"
+          export APP_VERSION_SANE="$(echo $APP_VERSION | sed 's/\./-/g')"
+          envsubst < image-recipe.tpl.json | tee image-recipe.json
+          aws imagebuilder create-image-recipe --cli-input-json file://image-recipe.json > /dev/null
+          IMAGE_BUILD_ARN=$(aws imagebuilder create-image \
+              --image-tests-configuration "imageTestsEnabled=false" \
+              --image-recipe-arn "arn:aws:imagebuilder:${AWS_REGION}:${AWS_ACCOUNT_ID}:image-recipe/nocode-postgres-ami-${APP_VERSION_SANE}/1.0.0" \
+              --infrastructure-configuration-arn "arn:aws:imagebuilder:${AWS_REGION}:${AWS_ACCOUNT_ID}:infrastructure-configuration/nocode-postgres-ami" \
+              --distribution-configuration-arn "arn:aws:imagebuilder:${AWS_REGION}:${AWS_ACCOUNT_ID}:distribution-configuration/nocode-postgres-ami" \
+              | jq -r '.imageBuildVersionArn')
+          echo "Building: $IMAGE_BUILD_ARN"
+          BUILD_STATUS=""
+          while [[ -z "$(echo $BUILD_STATUS | grep -E '^(AVAILABLE|CANCELLED|FAILED|DEPRECATED|DELETED)$')" ]]; do
+            sleep 30
+            BUILD_STATUS=$(aws imagebuilder get-image --image-build-version-arn "$IMAGE_BUILD_ARN" | jq -r '.image.state.status')
+            echo "Waiting for AMI...${BUILD_STATUS}"
+          done
+          if [[ "$BUILD_STATUS" != "AVAILABLE" ]]; then
+            echo "AMI Build failed"
+            exit 1
+          fi
+          AMI_ID="$(aws imagebuilder get-image --image-build-version-arn "$IMAGE_BUILD_ARN" | jq -r '.image.outputResources.amis[0].image')"
+          echo "AMI: $AMI_ID"
+          echo $AMI_ID > ami_id
+          aws s3 cp --content-type "text/plain" ami_id s3://${ARTIFACTS_BUCKET}/nocode-postgres/${APP_VERSION}/ami_id
+
+
+  release-docker-image:
+    runs-on: ubuntu-latest
+    name: "Release Docker Image"
+    env:
+      AWS_REGION: eu-central-1
       # ARTIFACTS_BUCKET: priceloop-build-artifacts-nocode
       DOCKER_IMAGE: priceloop/nocode-postgres
     steps:
@@ -52,18 +113,35 @@ jobs:
             --push \
             . 
 
-#      - name: Build and push
-#        uses: docker/build-push-action@v2
-#        with:
-#          context: .
-#          platforms: linux/amd64,linux/arm64
-#          push: true
-#          tags: ${{ steps.prep.outputs.tags }}
+  nocode-repo:
+    needs: ["release-docker-image", "release-ami"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Version
+        run: |
+          echo "Version: ${APP_VERSION}"
 
+      - name: Checkout nocode repository
+        if: github.ref_type == 'tag'
+        uses: actions/checkout@v3
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          repository: priceloop/nocode
+          path: nocode
 
-
-        # docker push ${ECR_URL}/${POSTGRES_REPOSITORY}:${APP_VERSION}
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-
+      - name: Update nocode repository
+        if: github.ref_type == 'tag'
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          cd nocode/
+          git config user.name "priceloop"
+          git config user.email "ogopogo@priceloop.ai"
+          git checkout -b "postgres-${APP_VERSION}"
+          source .envrc
+          sed "s/NOCODE_POSTGRES_VERSION=\"${NOCODE_POSTGRES_VERSION}\"/NOCODE_POSTGRES_VERSION=\"${APP_VERSION}\"/" -i  .envrc
+          git diff --stat
+          git commit -am "chore: update nocode postgres version to ${APP_VERSION}"
+          git log --oneline --max-count=10
+          git push --set-upstream origin "postgres-${APP_VERSION}"
+          gh pr create -f
