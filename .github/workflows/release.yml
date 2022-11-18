@@ -23,9 +23,8 @@ jobs:
     env:
       AWS_REGION: eu-central-1
       APP_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || github.event.pull_request.head.sha || github.sha  }}
-      ARTIFACTS_BUCKET: priceloop-build-artifacts-nocode
-      POSTGRES_REPOSITORY: priceloop/postgres
-      ECR_URL: public.ecr.aws
+      # ARTIFACTS_BUCKET: priceloop-build-artifacts-nocode
+      DOCKER_IMAGE: priceloop/nocode-postgres
     steps:
       - uses: actions/checkout@v3
         with:
@@ -47,35 +46,24 @@ jobs:
           app_id: ${{ secrets.GH_APP_ID }}
           private_key: ${{ secrets.GH_PRIVATE_KEY }}
 
-      - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: ${{ secrets.IAM_ROLE_ARTIFACTS }}
-          role-session-name: "priceloop-nocode-postgres-github-action"
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Prepare tags
-        id: prep
+      - name: Build and Publish Docker Images
         run: |
-          DOCKER_IMAGE="${ECR_URL}/${POSTGRES_REPOSITORY}"
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
+          docker buildx build \
+            --platform linux/arm64,linux/amd64 \
+            --tag ghcr.io/${DOCKER_IMAGE}:${APP_VERSION} \
+            --label "org.opencontainers.image.source=https://github.com/priceloop/nocode-postgres" \
+            --label "org.opencontainers.image.description=Postgres Image for Nocode" \
+            --label "org.opencontainers.image.licenses=MIT" \
+            --push
 
-          TAGS="${DOCKER_IMAGE}:${APP_VERSION}"
-
-          # Set output parameters.
-          echo ::set-output name=tags::${TAGS}
-          echo ::set-output name=docker_image::${DOCKER_IMAGE}
-
-      - name: Docker login on ecr
-        run: |
-          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.prep.outputs.tags }}
+#      - name: Build and push
+#        uses: docker/build-push-action@v2
+#        with:
+#          context: .
+#          platforms: linux/amd64,linux/arm64
+#          push: true
+#          tags: ${{ steps.prep.outputs.tags }}
 
 
 
@@ -83,3 +71,4 @@ jobs:
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
+
