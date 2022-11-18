@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: ["main", "arm-build"]
+    branches: [ "main" ]
     tags: [ v* ]
   # pull_request:
   #   types: [ opened, synchronize, reopened ]
@@ -114,15 +114,23 @@ jobs:
             . 
 
   nocode-repo:
-    needs: ["release-docker-image", "release-ami"]
+    name: "Push version to nocode-repo"
+    if: github.ref_type == 'tag'
+    needs: [ "release-docker-image", "release-ami" ]
     runs-on: ubuntu-latest
     steps:
       - name: Version
         run: |
           echo "Version: ${APP_VERSION}"
 
+      - name: Generate github token
+        id: generate-token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.GH_APP_ID }}
+          private_key: ${{ secrets.GH_PRIVATE_KEY }}
+
       - name: Checkout nocode repository
-        if: github.ref_type == 'tag'
         uses: actions/checkout@v3
         with:
           token: ${{ steps.generate-token.outputs.token }}
@@ -130,7 +138,6 @@ jobs:
           path: nocode
 
       - name: Update nocode repository
-        if: github.ref_type == 'tag'
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
