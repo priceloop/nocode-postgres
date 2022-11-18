@@ -43,12 +43,13 @@ jobs:
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
           docker buildx build \
-            --platform linux/amd64 \ 
+            --platform linux/arm64,linux/amd64 \
             --tag ghcr.io/${DOCKER_IMAGE}:${APP_VERSION} \
             --label "org.opencontainers.image.source=https://github.com/priceloop/nocode-postgres" \
             --label "org.opencontainers.image.description=Postgres Image for Nocode" \
             --label "org.opencontainers.image.licenses=MIT" \
-            --push
+            --push \
+            . 
 
 #      - name: Build and push
 #        uses: docker/build-push-action@v2
