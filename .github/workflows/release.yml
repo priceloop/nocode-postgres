@@ -49,7 +49,6 @@ jobs:
         run: |
           aws s3 cp imagebuild.sh s3://${ARTIFACTS_BUCKET}/nocode-postgres/${APP_VERSION}/imagebuild.sh
           aws s3 cp --recursive postgres_extension s3://${ARTIFACTS_BUCKET}/nocode-postgres/${APP_VERSION}/postgres_extension
-          aws s3 cp --recursive postgres_config s3://${ARTIFACTS_BUCKET}/nocode-postgres/${APP_VERSION}/postgres_config
 
       - name: AMI Build
         run: |
