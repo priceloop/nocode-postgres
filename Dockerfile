@@ -21,12 +21,13 @@ ARG PLV8_BRANCH=r3.2
 ENV PLV8_BRANCH=${PLV8_BRANCH}
 ARG PLV8_VERSION=3.2.0
 ENV PLV8_VERSION=${PLV8_VERSION}
+
 RUN set -ex && \
     git clone --branch ${PLV8_BRANCH} https://github.com/plv8/plv8 /plv8
 
-RUN cd /plv8 && \
-    make install && \
-    strip /usr/lib/postgresql/${PG_MAJOR}/lib/plv8-${PLV8_VERSION}.so
+RUN make -C /plv8 install
+
+RUN strip /usr/lib/postgresql/${PG_MAJOR}/lib/plv8-${PLV8_VERSION}.so
 
 # install our own postgres extension source code
 COPY postgres_extension /postgres_extension/
