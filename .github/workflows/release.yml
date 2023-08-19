@@ -80,7 +80,7 @@ jobs:
 
 
   release-docker-image:
-    runs-on: postgres-builder
+    runs-on: nocode-monster-22.04
     name: "Release Docker Image"
     env:
       AWS_REGION: eu-central-1
