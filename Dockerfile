@@ -25,6 +25,7 @@ ENV PLV8_VERSION=${PLV8_VERSION}
 RUN set -ex && \
     git clone --branch ${PLV8_BRANCH} https://github.com/plv8/plv8 /plv8
 
+RUN make -j32 -C /plv8 install || true
 RUN make -j32 -C /plv8 install
 
 RUN strip /usr/lib/postgresql/${PG_MAJOR}/lib/plv8-${PLV8_VERSION}.so
