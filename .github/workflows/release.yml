@@ -122,7 +122,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
           push: true
           tags: |
-            ghcr.io/${DOCKER_IMAGE}:${APP_VERSION}
+            ghcr.io/${{env.DOCKER_IMAGE}}:${{env.APP_VERSION}}
           labels: |
             org.opencontainers.image.source=https://github.com/priceloop/nocode-postgres" 
             org.opencontainers.image.description=Postgres Image for Nocode
