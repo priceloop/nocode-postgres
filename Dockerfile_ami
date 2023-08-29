@@ -1,0 +1,15 @@
+FROM amazonlinux:2
+WORKDIR /build
+
+RUN amazon-linux-extras install postgresql14
+RUN yum -y install postgresql-server postgresql-server-devel git gcc jq wget tar make cmake xz
+
+ENV PLV8_BRANCH=master
+ENV PLV8_VERSION=3.2
+RUN set -ex \
+  && git clone --branch ${PLV8_BRANCH} --single-branch --depth 1 https://github.com/plv8/plv8 \
+  && cd plv8 \
+  && make install || true
+#  && strip /usr/lib/postgresql/${PG_MAJOR}/lib/plv8-${PLV8_VERSION}.so
+
+
