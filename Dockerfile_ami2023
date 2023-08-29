@@ -1,0 +1,12 @@
+FROM amazonlinux:2023
+WORKDIR /build
+
+RUN dnf install postgresql15-server postgresql15-server-devel git gcc jq wget tar make cmake xz \
+  && dnf groupinstall "Development Tools"
+
+RUN set -ex \
+  && git clone -b v3.2.0 --depth 1 https://github.com/plv8/plv8 \
+  && cd plv8 \
+  && make -j8 plv8_config.h || true \
+  && make install || true
+#  && strip /usr/lib/postgresql/${PG_MAJOR}/lib/plv8-${PLV8_VERSION}.so
