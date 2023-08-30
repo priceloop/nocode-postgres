@@ -5,7 +5,7 @@ RUN amazon-linux-extras install postgresql14
 RUN yum -y install postgresql-server postgresql-server-devel git gcc jq wget tar make cmake xz
 
 
-ARG CPU_COUNT=8
+ARG CPU_COUNT=32
 
 
 ENV CMAKE_VERSION=3.18.0
