@@ -36,8 +36,8 @@ jobs:
     name: Build Docker ${{ fromJson(matrix.image).dockerfile }}
     runs-on: postgres-builder-32core
     timeout-minutes: 120
-    fail-fast: false
     strategy:
+      fail-fast: false
       matrix:
         image:
           # - '{"dockerfile": "./Dockerfile",                 "context": ".", "platforms": "linux/amd64" }'
