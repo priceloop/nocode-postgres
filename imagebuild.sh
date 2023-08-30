@@ -4,11 +4,12 @@ set -Eeuox pipefail
 
 amazon-linux-extras install postgresql14
 yum -y install postgresql-server postgresql-server-devel postgresql-plpython3 git gcc jq wget tar make xz \
-               libxml2-devel libyaml-devel lz4-devel libzstd-devel bzip2-devel
+               libxml2-devel libyaml-devel lz4-devel libzstd-devel bzip2-devel \
+               ncurses-compat-libs
+
 pip3 install requests
 
 CPU_COUNT=$(nproc --all)
-
 
 PLV8_BRANCH=v2.3.15
 git clone --branch "$PLV8_BRANCH" --depth 1 https://github.com/plv8/plv8
