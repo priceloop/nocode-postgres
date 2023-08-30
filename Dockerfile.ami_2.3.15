@@ -9,6 +9,6 @@ RUN yum -y install postgresql-server postgresql-server-devel git gcc jq wget tar
 RUN set -ex \
   && git clone -b v2.3.15 --depth 1 https://github.com/plv8/plv8 \
   && cd plv8 \
-  && make -j$(nproc --all) plv8_config.h || true \
-  && make -j$(nproc --all) install || true
+  && make -j$(nproc --all) plv8_config.h \
+  && make -j$(nproc --all) install
 #  && strip /usr/lib/postgresql/${PG_MAJOR}/lib/plv8-${PLV8_VERSION}.so

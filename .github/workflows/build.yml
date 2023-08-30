@@ -20,8 +20,8 @@ jobs:
       matrix:
         image:
           - '{"dockerfile": "./Dockerfile",                 "context": ".", "platforms": "linux/amd64" }'
-          - '{"dockerfile": "./Dockerfile_ami_buildscript", "context": ".", "platforms": "linux/amd64" }'
-          - '{"dockerfile": "./Dockerfile_ami_2.3.15",      "context": ".", "platforms": "linux/amd64" }'
+          - '{"dockerfile": "./Dockerfile.ami_buildscript", "context": ".", "platforms": "linux/amd64" }'
+          - '{"dockerfile": "./Dockerfile.ami_2.3.15",      "context": ".", "platforms": "linux/amd64" }'
     steps:
       - name: Checkout
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # pin@v3
