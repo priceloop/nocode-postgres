@@ -35,7 +35,7 @@ COPY postgres_extension /postgres_extension/
 
 # build and install custom postgres extension
 RUN make -j$(nproc --all) -C /postgres_extension/functions
-RUN make -j$(nproc --all) -C /postgres_extension/functions install
+RUN make -C /postgres_extension/functions install
 
 RUN git clone https://github.com/chimpler/postgres-aws-s3.git /postgres-aws-s3 && \
-    make -j$(nproc --all) -C /postgres-aws-s3 install
+    make -C /postgres-aws-s3 install
