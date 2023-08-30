@@ -2,18 +2,16 @@ FROM amazonlinux:2
 WORKDIR /build
 
 RUN amazon-linux-extras install postgresql14
-RUN yum -y install postgresql-server postgresql-server-devel git gcc jq wget tar make cmake xz
+RUN yum -y install postgresql-server postgresql-server-devel git gcc jq wget tar make xz
 
-
-ARG CPU_COUNT=32
-
+# ARG CPU_COUNT=32
 
 ENV CMAKE_VERSION=3.18.0
 RUN wget https://cmake.org/files/v3.18/cmake-${CMAKE_VERSION}.tar.gz \
  && tar -xvzf cmake-${CMAKE_VERSION}.tar.gz \
  && cd cmake-${CMAKE_VERSION} \
  && ./bootstrap \
- && make -j${CPU_COUNT} \
+ && make -j$(nproc --all) \
  && make install
 
 ENV PLV8_BRANCH=v3.2.0
@@ -22,7 +20,7 @@ RUN set -ex && git clone --branch ${PLV8_BRANCH} --depth 1 https://github.com/pl
 RUN set -ex \
   && cd plv8 \
   && sed -i 's/cmake -Denable/CXX=clang++ CC=clang cmake -Denable/' Makefile \
-  && make -j${CPU_COUNT} install || true
+  && make -j$(nproc --all) install || true
 #  && strip /usr/lib/postgresql/${PG_MAJOR}/lib/plv8-${PLV8_VERSION}.so
 
 
