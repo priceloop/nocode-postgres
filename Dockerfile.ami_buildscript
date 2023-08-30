@@ -1,4 +1,3 @@
 FROM amazonlinux:2
-WORKDIR /build
 COPY imagebuild.sh .
 RUN bash imagebuild.sh
