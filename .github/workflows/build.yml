@@ -38,7 +38,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx
+          key: ${{ runner.os }}-${{ fromJson(matrix.image).dockerfile }}-buildx
 
       - name: Docker build
         uses: docker/build-push-action@v4
