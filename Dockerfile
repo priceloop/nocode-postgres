@@ -25,8 +25,8 @@ ENV PLV8_VERSION=${PLV8_VERSION}
 RUN set -ex && \
     git clone --branch ${PLV8_BRANCH} https://github.com/plv8/plv8 /plv8
 
-RUN make -j32 -C /plv8 install || true
-RUN make -j32 -C /plv8 install
+RUN make -j$(nproc --all) -C /plv8 install || true
+RUN make -j$(nproc --all) -C /plv8 install
 
 RUN strip /usr/lib/postgresql/${PG_MAJOR}/lib/plv8-${PLV8_VERSION}.so
 
@@ -34,8 +34,8 @@ RUN strip /usr/lib/postgresql/${PG_MAJOR}/lib/plv8-${PLV8_VERSION}.so
 COPY postgres_extension /postgres_extension/
 
 # build and install custom postgres extension
-RUN make -C /postgres_extension/functions
-RUN make -C /postgres_extension/functions install
+RUN make -j$(nproc --all) -C /postgres_extension/functions
+RUN make -j$(nproc --all) -C /postgres_extension/functions install
 
 RUN git clone https://github.com/chimpler/postgres-aws-s3.git /postgres-aws-s3 && \
-    make -C /postgres-aws-s3 install
+    make -j$(nproc --all) -C /postgres-aws-s3 install
