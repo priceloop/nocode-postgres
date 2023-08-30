@@ -25,8 +25,8 @@ RUN set -ex && git clone --branch ${PLV8_BRANCH} --depth 1 https://github.com/pl
 RUN set -ex \
   && cd plv8 \
   && sed -i 's/cmake -Denable/CXX=clang++ CC=clang cmake -Denable/' Makefile \
-  && make -j$(nproc --all) plv8_config.h || true \
-  && make -j$(nproc --all) install || true
+  && make -j$(nproc --all) plv8_config.h \
+  && make -j$(nproc --all) install
 #  && strip /usr/lib/postgresql/${PG_MAJOR}/lib/plv8-${PLV8_VERSION}.so
 
 
