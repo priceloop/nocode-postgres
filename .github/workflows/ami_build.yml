@@ -15,4 +15,4 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: "Build Docker"
-        run: build docker build . -f Dockerfile_ami
+        run: docker build . -f Dockerfile_ami
